@@ -265,7 +265,7 @@ async function goNext() {
         || sessionStorage.getItem('boothFrameType')
         || 'classic-baby-pink';
 
-    window.location.href = `editFrame.html?frame=${frame}`;
+    window.location.href = `/edit-frame?frame=${frame}`;
 }
 
 /* ═══════════════════════════════════════════════════

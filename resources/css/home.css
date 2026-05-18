@@ -78,9 +78,9 @@ main {
 .photostrip-left,
 .photostrip-right {
   flex-shrink: 1;
-  width: 20%;  
-  min-width: 450px;
-  max-width: 1000px;
+  width: 10%;  
+  min-width: 250px;
+  max-width: 800px;
   height: auto;
 }
 

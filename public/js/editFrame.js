@@ -730,7 +730,7 @@ async function goPreview() {
 
         const fallback = sessionStorage.getItem('previewImage');
         if (fallback) {
-            window.location.href = 'preview.html';
+            window.location.href = '/preview';
         } else {
             alert('Could not generate preview. Please try again.');
             if (btn) { btn.disabled = false; btn.textContent = 'See Preview →'; }

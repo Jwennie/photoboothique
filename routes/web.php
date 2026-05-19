@@ -20,6 +20,11 @@ Route::get('/upload-photo',   fn() => file_get_contents(resource_path('views/upl
 Route::get('/preview',        fn() => file_get_contents(resource_path('views/preview.html')))->name('preview');
 Route::get('/qrcode',         fn() => file_get_contents(resource_path('views/qrcode.html')))->name('qrcode');
 Route::get('/gallery',        fn() => file_get_contents(resource_path('views/gallery.html')));
+Route::get('/login',        fn() => file_get_contents(resource_path('views/login.html')));
+Route::get('/forgot-password',        fn() => file_get_contents(resource_path('views/forgot-password.html')));
+Route::get('/new-password',        fn() => file_get_contents(resource_path('views/new-password.html')));
+Route::get('/register',        fn() => file_get_contents(resource_path('views/register.html')));
+
 
 /*
 |--------------------------------------------------------------------------

@@ -50,10 +50,10 @@ const STICKER_SRCS = [
    FRAME CONFIGS
 ═══════════════════════════════════════════════════════════ */
 const FRAME_CONFIGS = {
-    'classic-baby-pink': { pngSrc: '/assets/frames/classicbabypink.png', bgColor: '#fce8f0', layout: 'grid-2x2', frameW: 300, frameH: 393, footerH: 22, gap: 4,  pad: 7  },
-    'everyday-white':    { pngSrc: '/assets/frames/everydaywhite.png',   bgColor: '#fff',    layout: 'strip-4',  frameW: 280, frameH: 500, footerH: 50, gap: 4,  pad: 6  },
-    'shimmer-pink':      { pngSrc: '/assets/frames/shimmer-pink.png',    bgColor: '#f0d4fa', layout: 'instax',   frameW: 280, frameH: 380, footerH: 50, gap: 0,  pad: 10 },
-    'og-black':          { pngSrc: '/assets/frames/ogblack.png',         bgColor: '#111',    layout: 'grid-2x2', frameW: 360, frameH: 400, footerH: 48, gap: 5,  pad: 8  },
+    'classic-baby-pink': { pngSrc: '/assets/classicbabypink.png', bgColor: '#fce8f0', layout: 'grid-2x2', frameW: 300, frameH: 393, footerH: 22, gap: 4,  pad: 7  },
+    'everyday-white':    { pngSrc: '/assets/everydaywhite.png',   bgColor: '#fff',    layout: 'strip-4',  frameW: 280, frameH: 500, footerH: 50, gap: 4,  pad: 6  },
+    'shimmer-pink':      { pngSrc: '/assets/shimmer-pink.png',    bgColor: '#f0d4fa', layout: 'instax',   frameW: 280, frameH: 380, footerH: 50, gap: 0,  pad: 10 },
+    'og-black':          { pngSrc: '/assets/ogblack.png',         bgColor: '#111',    layout: 'grid-2x2', frameW: 360, frameH: 400, footerH: 48, gap: 5,  pad: 8  },
 };
 
 /* ═══════════════════════════════════════════════════════════

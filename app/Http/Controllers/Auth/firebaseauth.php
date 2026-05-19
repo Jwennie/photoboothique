@@ -105,7 +105,7 @@ class FirebaseAuth
         if (empty($token)) return null;
 
         return [
-            'uid'   => 'dev_' . substr(md5($token), 0, 12),
+            'uid'   => 'decpv_' . substr(md5($token), 0, 12),
             'email' => 'dev@placeholder.local',
             'name'  => 'Dev User',
         ];

@@ -152,6 +152,28 @@ main {
     transition: border 0.2s;
 }
 
+.download-icon {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: rgba(255,255,255,0.85);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    text-decoration: none;
+    color: #333;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.gallery-card:hover .download-icon {
+    opacity: 1;
+}
+
 .gallery-card.selected { border: 2px solid #c060e0; }
 
 .gallery-card img { width: 100%; height: 280px; object-fit: cover; display: block; }

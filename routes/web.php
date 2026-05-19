@@ -17,9 +17,12 @@ Route::get('/choose-frame',   fn() => file_get_contents(resource_path('views/cho
 Route::get('/edit-frame',     fn() => file_get_contents(resource_path('views/editFrame.html')));
 Route::get('/photobooth',     fn() => file_get_contents(resource_path('views/photobooth.html')));
 Route::get('/upload-photo',   fn() => file_get_contents(resource_path('views/uploadphoto.html')));
-Route::get('/preview',        fn() => file_get_contents(resource_path('views/preview.html')))->name('preview');
-Route::get('/qrcode',         fn() => file_get_contents(resource_path('views/qrcode.html')))->name('qrcode');
-Route::get('/gallery',        fn() => file_get_contents(resource_path('views/gallery.html')));
+Route::get('/preview', fn() => view('preview'))->name('preview');
+Route::get('/qrcode', fn() => view('qrcode'))->name('qrcode');
+Route::get('/gallery', function() {
+    $strips = \App\Models\PhotoStrip::latest()->get(); // ← ganti ini
+    return view('gallery', compact('strips'));
+});
 Route::get('/login',        fn() => file_get_contents(resource_path('views/login.html')));
 Route::get('/forgot-password',        fn() => file_get_contents(resource_path('views/forgot-password.html')));
 Route::get('/new-password',        fn() => file_get_contents(resource_path('views/new-password.html')));
@@ -36,11 +39,12 @@ Route::middleware('firebase.auth:optional')->group(function () {
     Route::post('/strip/save',  [PhotoStripController::class, 'store'])->name('strip.store');
     Route::get('/strip/{id}',   [PhotoStripController::class, 'show'])->name('strip.show');
     Route::get('/gallery-data', [PhotoStripController::class, 'gallery'])->name('gallery.data');
+    Route::delete('/strip/{id}', [PhotoStripController::class, 'destroy'])->name('strip.destroy'); // ← pindah ke sini
 });
 
 // These require login (token must be valid)
 Route::middleware('firebase.auth:required')->group(function () {
-    Route::delete('/strip/{id}',  [PhotoStripController::class, 'destroy'])->name('strip.destroy');
+    //Route::delete('/strip/{id}',  [PhotoStripController::class, 'destroy'])->name('strip.destroy');
     Route::get('/my-strips',      [PhotoStripController::class, 'myStrips'])->name('strip.mine');
 });
 

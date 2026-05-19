@@ -125,28 +125,30 @@
             btn.textContent = 'Uploading...';
 
             try {
-                const blob = dataURLtoBlob(stripDataURL);
-
-                const formData = new FormData();
-                formData.append('strip_image', blob, 'strip.jpg');
-
                 const token = document.querySelector('meta[name="csrf-token"]').content;
 
                 const response = await fetch('/strip/save', {
                     method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': token },
-                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image_base64: stripDataURL,           // kirim as base64 string
+                        frame_type: stripFrame || 'default',  // ambil dari sessionStorage
+                    }),
                 });
 
                 if (!response.ok) {
+                    const err = await response.json();
+                    console.error(err);
                     throw new Error('Upload failed: ' + response.status);
                 }
 
                 const data = await response.json();
 
-                // hand the QR url + image url to the QR page
                 sessionStorage.setItem('qrUrl', data.qr_url);
-                sessionStorage.setItem('stripImageUrl', data.image_url);
+                sessionStorage.setItem('stripImageUrl', data.cloudinary_url); // ← sesuaikan key
 
                 window.location.href = '/qrcode';
 

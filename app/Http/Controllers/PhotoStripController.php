@@ -50,10 +50,8 @@ class PhotoStripController extends Controller
         }
 
         // Build download token + QR URL
-        $downloadToken = Str::random(40);
-        $downloadUrl   = route('strip.download', $downloadToken);
-        $qrUrl         = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='
-            . urlencode($downloadUrl);
+        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='
+        . urlencode($result['url']); // langsung pakai Cloudinary URL
 
         // Pull firebase_uid from middleware (null if guest)
         $firebaseUid = $request->attributes->get('firebase_uid');
@@ -71,13 +69,11 @@ class PhotoStripController extends Controller
             'download_count' => 0,
         ]);
 
-        cache()->put("strip_token:{$downloadToken}", $strip->id, now()->addMinutes(30));
-
         return response()->json([
             'strip_id'       => $strip->id,
             'cloudinary_url' => $strip->cloudinary_url,
             'qr_url'         => $strip->qr_url,
-            'download_url'   => $downloadUrl,
+            //'download_url'   => $downloadUrl,
         ]);
     }
 
@@ -159,18 +155,10 @@ class PhotoStripController extends Controller
      * Delete a strip (requires firebase.auth:required + ownership).
      */
     public function destroy(Request $request, string $id)
-    {
-        $uid   = $request->attributes->get('firebase_uid');
-        $strip = PhotoStrip::findOrFail($id);
-
-        // Only owner can delete
-        if ($strip->firebase_uid !== $uid) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-
-        $this->cloudinary->deleteStrip($strip->cloudinary_id);
-        $strip->delete();
-
-        return response()->json(['success' => true]);
-    }
+{
+    $strip = PhotoStrip::findOrFail($id);
+    $this->cloudinary->deleteStrip($strip->cloudinary_id);
+    $strip->delete();
+    return response()->json(['success' => true]);
+}
 }

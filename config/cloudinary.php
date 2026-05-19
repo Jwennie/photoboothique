@@ -17,8 +17,8 @@ return [
     |
     */
 
-    'cloud_name' => env('djq1edpbf'),
-    'api_key'    => env('778411931594738'),
-    'api_secret' => env('19az1QxLpikkBixOw9rTaU7c3kU'),
+    'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+    'api_key'    => env('CLOUDINARY_API_KEY'),
+    'api_secret' => env('CLOUDINARY_API_SECRET'),
 
 ];

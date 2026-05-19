@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="/css/layout.css">
     <link rel="stylesheet" href="/css/gallery.css">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
 <body>
     <div class="background">
@@ -44,9 +46,12 @@
                 <div class="gallery-grid" id="gallery-grid">
 
                     @forelse ($strips as $strip)
-                        <div class="gallery-card" data-id="{{ $strip->id }}" onclick="toggleCard(this)">
-                            <img src="{{ $strip->image_url }}" alt="Photo strip">
+                        <div class="gallery-card" data-id="{{ $strip->id }}" data-url="{{ $strip->cloudinary_url }}" onclick="toggleCard(this)">
+                            <img src="{{ $strip->cloudinary_url }}" alt="Photo strip">
                             <div class="checkmark">&#10003;</div>
+                            <a class="download-icon" href="{{ $strip->cloudinary_url }}" download="photoboothique-strip.jpg" target="_blank" onclick="event.stopPropagation()">
+                                &#8595;
+                            </a>
                         </div>
                     @empty
                         <div class="empty-state" id="empty-state">
@@ -131,20 +136,37 @@
         }
 
         // ── Download every selected strip ───────────────────────
-        function downloadSelected() {
+        async function downloadSelected() {
             const selected = document.querySelectorAll('.gallery-card.selected');
             if (selected.length === 0) return alert('Please select at least one photo strip.');
 
-            selected.forEach(card => {
-                const url = card.querySelector('img').src;
+            if (selected.length === 1) {
+                // Single file — langsung download
+                const url = selected[0].querySelector('img').src;
                 const link = document.createElement('a');
                 link.href = url;
                 link.download = 'photoboothique-strip.jpg';
-                link.target = '_blank';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                return;
+            }
+
+            // Multiple files — zip semuanya
+            const zip = new JSZip();
+            const folder = zip.folder('photoboothique-strips');
+
+            const fetchPromises = [...selected].map(async (card, index) => {
+                const url = card.querySelector('img').src;
+                const response = await fetch(url);
+                const blob = await response.blob();
+                folder.file('strip-' + (index + 1) + '.jpg', blob);
             });
+
+            await Promise.all(fetchPromises);
+
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            saveAs(zipBlob, 'photoboothique-strips.zip');
         }
 
         // ── Delete modal ────────────────────────────────────────

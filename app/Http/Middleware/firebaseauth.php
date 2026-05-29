@@ -128,13 +128,31 @@ class FirebaseAuth
         }
 
         // ──────────────────────────────────────────────────────────
-        // DEV STUB — accepts any non-empty token and returns a fake user.
-        // Keep this only for local development when the SDK/credentials are absent.
+        // DEV STUB — decodes the JWT payload without verifying the signature
+        // to extract a stable user UID ('sub' claim) for local development
+        // when the SDK or credentials are absent.
         // ──────────────────────────────────────────────────────────
         if (empty($token)) return null;
 
+        // Try decoding JWT payload to get a stable, real user UID
+        $parts = explode('.', $token);
+        if (count($parts) === 3) {
+            $payload = base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1]), true);
+            if ($payload) {
+                $decoded = json_decode($payload, true);
+                if (is_array($decoded) && isset($decoded['sub'])) {
+                    return [
+                        'uid'   => $decoded['sub'],
+                        'email' => $decoded['email'] ?? 'dev@placeholder.local',
+                        'name'  => $decoded['name'] ?? 'Dev User',
+                    ];
+                }
+            }
+        }
+
+        // Fallback for static mock tokens (e.g. 'dev-token')
         return [
-            'uid'   => 'dev_' . substr(md5($token), 0, 12),
+            'uid'   => 'dev_user_static',
             'email' => 'dev@placeholder.local',
             'name'  => 'Dev User',
         ];

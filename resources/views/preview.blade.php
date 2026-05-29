@@ -104,7 +104,18 @@
 
         // ── Re-edit: go back to the editor with the same frame ──
         function goReedit() {
-            window.location.href = '/edit-frame' + (stripFrame ? ('?frame=' + stripFrame) : '');
+            const savedStateRaw = sessionStorage.getItem('boothEditorState');
+            let mode = '';
+            if (savedStateRaw) {
+                try {
+                    const saved = JSON.parse(savedStateRaw);
+                    if (saved.mode) mode = saved.mode;
+                } catch (e) {}
+            }
+            let url = '/edit-frame?reedit=1';
+            if (stripFrame) url += '&frame=' + stripFrame;
+            if (mode) url += '&mode=' + mode;
+            window.location.href = url;
         }
 
         // ── Convert a dataURL to a Blob (for file upload) ───────
@@ -144,6 +155,27 @@
                         frame_type: stripFrame || 'default',
                     }),
                 });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    console.error(err);
+                    throw new Error('Upload failed: ' + response.status);
+                }
+
+                const data = await response.json();
+
+                sessionStorage.setItem('qrUrl', data.qr_url);
+                sessionStorage.setItem('stripImageUrl', data.cloudinary_url); // ← sesuaikan key
+
+                window.location.href = '/qrcode';
+
+            } catch (err) {
+                console.error(err);
+                alert('Could not upload your photo strip. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Download Photo';
+            }
+        }
     </script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>

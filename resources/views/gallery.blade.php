@@ -120,20 +120,37 @@
             document.getElementById('gallery-grid').scrollBy({ left: dir * 300, behavior: 'smooth' });
         }
 
+        // ── Download helper for single cross-origin URL ──────────
+        async function downloadSingle(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = 'photoboothique-strip.jpg';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+            } catch (err) {
+                console.error('Download failed, falling back to open in tab:', err);
+                window.open(url, '_blank');
+            }
+        }
+
         // ── Download every selected strip ───────────────────────
         async function downloadSelected() {
             const selected = document.querySelectorAll('.gallery-card.selected');
             if (selected.length === 0) return alert('Please select at least one photo strip.');
 
             if (selected.length === 1) {
-                // Single file — langsung download
+                // Single file — langsung download tanpa redirect tab baru
                 const url = selected[0].querySelector('img').src;
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'photoboothique-strip.jpg';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                await downloadSingle(url);
                 return;
             }
 

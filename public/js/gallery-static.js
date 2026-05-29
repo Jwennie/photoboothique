@@ -90,7 +90,7 @@ async function renderGalleryStrips() {
             card.innerHTML = `
                 <img src="${strip.cloudinary_url}" alt="Photo strip">
                 <div class="checkmark">&#10003;</div>
-                <a class="download-icon" href="${strip.cloudinary_url}" download="photoboothique-strip.jpg" target="_blank" onclick="event.stopPropagation()">
+                <a class="download-icon" href="#" onclick="downloadSingle('${strip.cloudinary_url}'); event.stopPropagation(); return false;">
                     &#8595;
                 </a>
             `;

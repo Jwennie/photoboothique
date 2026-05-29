@@ -115,10 +115,10 @@
 
         // ── Download the strip directly to this device ──────────
         function downloadStrip() {
+            const localDataUrl = sessionStorage.getItem('previewImage') || stripImageUrl;
             const link = document.createElement('a');
-            link.href = stripImageUrl;
+            link.href = localDataUrl;
             link.download = 'photoboothique-strip.jpg';
-            link.target = '_blank';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);

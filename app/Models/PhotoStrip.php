@@ -38,6 +38,7 @@ class PhotoStrip extends Model
 
     protected $fillable = [
         'id',
+        'firebase_uid',
         'frame_type',
         'cloudinary_url',
         'cloudinary_id',

@@ -127,38 +127,22 @@
             try {
                 const token = document.querySelector('meta[name="csrf-token"]').content;
 
+                // Tambah ini — ambil Firebase ID token
+                const user = firebase.auth().currentUser;
+                const firebaseToken = user ? await user.getIdToken() : 'dev-token';
+
                 const response = await fetch('/strip/save', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': token,
                         'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + firebaseToken,  // ← tambah ini
                     },
                     body: JSON.stringify({
-                        image_base64: stripDataURL,           // kirim as base64 string
-                        frame_type: stripFrame || 'default',  // ambil dari sessionStorage
+                        image_base64: stripDataURL,
+                        frame_type: stripFrame || 'default',
                     }),
                 });
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    console.error(err);
-                    throw new Error('Upload failed: ' + response.status);
-                }
-
-                const data = await response.json();
-
-                sessionStorage.setItem('qrUrl', data.qr_url);
-                sessionStorage.setItem('stripImageUrl', data.cloudinary_url); // ← sesuaikan key
-
-                window.location.href = '/qrcode';
-
-            } catch (err) {
-                console.error(err);
-                alert('Could not upload your photo strip. Please try again.');
-                btn.disabled = false;
-                btn.textContent = 'Download Photo';
-            }
-        }
     </script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/css/preview.css">
     <!-- CSRF token so the upload POST is accepted by Laravel -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="/js/navbar-prerender.js"></script>
 </head>
 <body>
     <div class="background">
@@ -24,7 +25,7 @@
             <li><a href="/gallery">Gallery</a></li>
         </ul>
         <div class="nav-right">
-            <button class="login-btn" onclick="window.location.href='/login'">Login</button>
+            <button id="nav-login-btn" class="login-btn" onclick="window.location.href='/login'">Login</button>
             <button class="hamburger" onclick="toggleMenu()">&#9776;</button>
         </div>
     </nav>
@@ -103,7 +104,18 @@
 
         // ── Re-edit: go back to the editor with the same frame ──
         function goReedit() {
-            window.location.href = '/edit-frame' + (stripFrame ? ('?frame=' + stripFrame) : '');
+            const savedStateRaw = sessionStorage.getItem('boothEditorState');
+            let mode = '';
+            if (savedStateRaw) {
+                try {
+                    const saved = JSON.parse(savedStateRaw);
+                    if (saved.mode) mode = saved.mode;
+                } catch (e) {}
+            }
+            let url = '/edit-frame?reedit=1';
+            if (stripFrame) url += '&frame=' + stripFrame;
+            if (mode) url += '&mode=' + mode;
+            window.location.href = url;
         }
 
         // ── Convert a dataURL to a Blob (for file upload) ───────
@@ -127,15 +139,20 @@
             try {
                 const token = document.querySelector('meta[name="csrf-token"]').content;
 
+                // Tambah ini — ambil Firebase ID token
+                const user = firebase.auth().currentUser;
+                const firebaseToken = user ? await user.getIdToken() : 'dev-token';
+
                 const response = await fetch('/strip/save', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': token,
                         'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + firebaseToken,  // ← tambah ini
                     },
                     body: JSON.stringify({
-                        image_base64: stripDataURL,           // kirim as base64 string
-                        frame_type: stripFrame || 'default',  // ambil dari sessionStorage
+                        image_base64: stripDataURL,
+                        frame_type: stripFrame || 'default',
                     }),
                 });
 
@@ -160,5 +177,10 @@
             }
         }
     </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="/js/firebase-init.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth-navbar.js"></script>
 </body>
 </html>

@@ -98,14 +98,61 @@ class FirebaseAuth
      */
     private function verifyToken(string $token): ?array
     {
+        // If the Kreait Firebase SDK is installed and credentials are configured,
+        // use it to verify the ID token. Otherwise fall back to a harmless
+        // development stub so existing flows keep working.
+        if (class_exists(\Kreait\Firebase\Factory::class) && env('FIREBASE_CREDENTIALS')) {
+            try {
+                $credentialsPath = env('FIREBASE_CREDENTIALS');
+                if (!file_exists($credentialsPath)) {
+                    logger()->warning('FIREBASE_CREDENTIALS set but file not found: ' . $credentialsPath);
+                    return null;
+                }
+
+                $factory = (new \Kreait\Firebase\Factory())->withServiceAccount($credentialsPath);
+                $auth = $factory->createAuth();
+
+                // verifyIdToken will throw if token is invalid/expired
+                $verified = $auth->verifyIdToken($token);
+                $claims = $verified->claims();
+
+                return [
+                    'uid'   => $claims->get('sub'),
+                    'email' => $claims->get('email'),
+                    'name'  => $claims->get('name'),
+                ];
+            } catch (\Throwable $e) {
+                logger()->warning('Firebase token verification failed: ' . $e->getMessage());
+                return null;
+            }
+        }
+
         // ──────────────────────────────────────────────────────────
-        // DEV STUB — accepts any non-empty token and returns a fake user.
-        // Remove/replace this before going to production.
+        // DEV STUB — decodes the JWT payload without verifying the signature
+        // to extract a stable user UID ('sub' claim) for local development
+        // when the SDK or credentials are absent.
         // ──────────────────────────────────────────────────────────
         if (empty($token)) return null;
 
+        // Try decoding JWT payload to get a stable, real user UID
+        $parts = explode('.', $token);
+        if (count($parts) === 3) {
+            $payload = base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1]), true);
+            if ($payload) {
+                $decoded = json_decode($payload, true);
+                if (is_array($decoded) && isset($decoded['sub'])) {
+                    return [
+                        'uid'   => $decoded['sub'],
+                        'email' => $decoded['email'] ?? 'dev@placeholder.local',
+                        'name'  => $decoded['name'] ?? 'Dev User',
+                    ];
+                }
+            }
+        }
+
+        // Fallback for static mock tokens (e.g. 'dev-token')
         return [
-            'uid'   => 'dev_' . substr(md5($token), 0, 12),
+            'uid'   => 'dev_user_static',
             'email' => 'dev@placeholder.local',
             'name'  => 'Dev User',
         ];

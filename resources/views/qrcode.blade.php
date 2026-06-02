@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/layout.css">
     <link rel="stylesheet" href="/css/qrcode.css">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="/js/navbar-prerender.js"></script>
 </head>
 <body>
     <div class="background">
@@ -23,7 +24,7 @@
             <li><a href="/gallery">Gallery</a></li>
         </ul>
         <div class="nav-right">
-            <button class="login-btn" onclick="window.location.href='/login'">Login</button>
+            <button id="nav-login-btn" class="login-btn" onclick="window.location.href='/login'">Login</button>
             <button class="hamburger" onclick="toggleMenu()">&#9776;</button>
         </div>
     </nav>
@@ -114,10 +115,10 @@
 
         // ── Download the strip directly to this device ──────────
         function downloadStrip() {
+            const localDataUrl = sessionStorage.getItem('previewImage') || stripImageUrl;
             const link = document.createElement('a');
-            link.href = stripImageUrl;
+            link.href = localDataUrl;
             link.download = 'photoboothique-strip.jpg';
-            link.target = '_blank';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -128,5 +129,10 @@
             window.location.href = '/gallery';
         }
     </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="/js/firebase-init.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth-navbar.js"></script>
 </body>
 </html>

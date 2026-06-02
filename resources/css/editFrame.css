@@ -265,7 +265,6 @@ html, body { overflow-x: hidden; }
     background: transparent;   /* transparent so PNG background shows through */
     transition: outline 0.15s;
 }
-}
 
 .frame-slot.drag-over {
     outline: 2px dashed var(--pink);
@@ -314,7 +313,7 @@ html, body { overflow-x: hidden; }
      */
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
     display: block;
     transform-origin: center center;
     pointer-events: none;

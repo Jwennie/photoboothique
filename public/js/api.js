@@ -1,11 +1,5 @@
-/* ═══════════════════════════════════════════════════
-   PhotoBoothique — API Client
-   Laravel backend + Firebase Auth (placeholder)
-═══════════════════════════════════════════════════ */
-
 const BoothAPI = (() => {
 
-    // ── CSRF Setup ────────────────────────────────
     let csrfReady = false;
 
     async function initCsrf() {
@@ -22,38 +16,30 @@ const BoothAPI = (() => {
         return match ? decodeURIComponent(match[1]) : '';
     }
 
-    /**
-     * Get Firebase ID token if user is logged in.
-     *
-     * PLACEHOLDER: returns whatever's stored in sessionStorage.
-     * When temenmu setup Firebase, replace with:
-     *
-     *   const user = firebase.auth().currentUser;
-     *   return user ? await user.getIdToken() : null;
-     */
-    function getFirebaseToken() {
-        return sessionStorage.getItem('firebaseToken') || null;
+    async function getFirebaseToken() {
+        if (typeof firebase !== 'undefined' && firebase.auth().currentUser) {
+            return await firebase.auth().currentUser.getIdToken();
+        }
+        return sessionStorage.getItem('firebaseToken') || 'dev-token';
     }
 
-    // Build headers with optional Firebase Bearer token
-    function buildHeaders(extra = {}) {
+    async function buildHeaders(extra = {}) {
         const headers = {
             'Accept': 'application/json',
             'X-XSRF-TOKEN': getXsrfToken(),
             ...extra,
         };
-        const token = getFirebaseToken();
+        const token = await getFirebaseToken();
         if (token) headers['Authorization'] = 'Bearer ' + token;
         return headers;
     }
 
-    // ── Helpers ───────────────────────────────────
     async function post(url, body = {}) {
         await initCsrf();
         const res = await fetch(url, {
             method: 'POST',
             credentials: 'same-origin',
-            headers: buildHeaders({ 'Content-Type': 'application/json' }),
+            headers: await buildHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify(body),
         });
         if (!res.ok) {
@@ -66,7 +52,7 @@ const BoothAPI = (() => {
     async function get(url) {
         const res = await fetch(url, {
             credentials: 'same-origin',
-            headers: buildHeaders(),
+            headers: await buildHeaders(),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -77,14 +63,10 @@ const BoothAPI = (() => {
         const res = await fetch(url, {
             method: 'DELETE',
             credentials: 'same-origin',
-            headers: buildHeaders(),
+            headers: await buildHeaders(),
         });
         return res.ok;
     }
-
-    /* ───────────────────────────────────────────────
-       SESSION  (client-side stubs)
-    _______________________________________________ */
 
     async function startSession(frameType, source = 'photobooth') {
         sessionStorage.setItem('boothFrameType', frameType);
@@ -99,10 +81,6 @@ const BoothAPI = (() => {
 
     async function getSession()    { return null; }
     async function deleteSession() { return true; }
-
-    /* ───────────────────────────────────────────────
-       STRIP
-    _______________________________________________ */
 
     async function saveStrip({ imageBase64, frameType, addDate = false, addTime = false }) {
         const data = await post('/strip/save', {
@@ -130,10 +108,6 @@ const BoothAPI = (() => {
         return del(`/strip/${id}`);
     }
 
-    /* ───────────────────────────────────────────────
-       GALLERY
-    _______________________________________________ */
-
     async function getGallery({ page = 1, frame = '' } = {}) {
         const params = new URLSearchParams({ page });
         if (frame) params.set('frame', frame);
@@ -144,45 +118,30 @@ const BoothAPI = (() => {
         return get(`/my-strips?page=${page}`);
     }
 
-    /* ───────────────────────────────────────────────
-       AUTH HELPERS (placeholders for temenmu's Firebase setup)
-    _______________________________________________ */
-
     function setFirebaseToken(token) {
         if (token) sessionStorage.setItem('firebaseToken', token);
         else sessionStorage.removeItem('firebaseToken');
     }
 
     function isLoggedIn() {
-        return !!getFirebaseToken();
+        return !!sessionStorage.getItem('firebaseToken');
     }
 
     function logout() {
         sessionStorage.removeItem('firebaseToken');
-        // Temenmu's code akan tambahkan: firebase.auth().signOut();
     }
 
-    /* ───────────────────────────────────────────────
-       PUBLIC API
-    _______________________________________________ */
     return {
-        // Session
         startSession,
         uploadPhotos,
         getSession,
         deleteSession,
-
-        // Strip
         saveStrip,
         getStrip,
         downloadStrip,
         deleteStrip,
-
-        // Gallery
         getGallery,
         getMyStrips,
-
-        // Auth
         setFirebaseToken,
         isLoggedIn,
         logout,

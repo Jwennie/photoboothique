@@ -51,8 +51,8 @@ const STICKER_SRCS = [
 ═══════════════════════════════════════════════════════════ */
 const FRAME_CONFIGS = {
     'classic-baby-pink': { pngSrc: '/assets/classicbabypink.png', bgColor: '#fce8f0', layout: 'grid-2x2', frameW: 300, frameH: 393, footerH: 22, gap: 4,  pad: 7  },
-    'everyday-white':    { pngSrc: '/assets/everydaywhite.png',   bgColor: '#fff',    layout: 'strip-4',  frameW: 280, frameH: 500, footerH: 50, gap: 4,  pad: 6  },
-    'shimmer-pink':      { pngSrc: '/assets/shimmer-pink.png',    bgColor: '#f0d4fa', layout: 'instax',   frameW: 280, frameH: 380, footerH: 50, gap: 0,  pad: 10 },
+    'everyday-white':    { pngSrc: '/assets/everydaywhite.png',   bgColor: '#fff',    layout: 'grid-2x2', frameW: 280, frameH: 500, footerH: 50, gap: 4,  pad: 6  },
+'shimmer-pink':      { pngSrc: '/assets/frames/shimmer-pink.png',    bgColor: '#f0d4fa', layout: 'grid-2x2', frameW: 280, frameH: 380, footerH: 50, gap: 4,  pad: 10 },
     'og-black':          { pngSrc: '/assets/ogblack.png',         bgColor: '#111',    layout: 'grid-2x2', frameW: 360, frameH: 400, footerH: 48, gap: 5,  pad: 8  },
 };
 
@@ -96,6 +96,62 @@ const scaleVal      = document.getElementById('scaleVal');
     st.cfg        = FRAME_CONFIGS[st.frameType] || FRAME_CONFIGS['og-black'];
 
     buildFrame();
+
+    // Restore editor state if re-editing
+    const isReedit = params.get('reedit') === '1';
+    const savedStateRaw = sessionStorage.getItem('boothEditorState');
+    if (isReedit && savedStateRaw) {
+        try {
+            const savedState = JSON.parse(savedStateRaw);
+            if (savedState.frameType === st.frameType) {
+                // Restore slots
+                if (Array.isArray(savedState.slots)) {
+                    savedState.slots.forEach((savedSlot, idx) => {
+                        if (st.slots[idx] && savedSlot.photoIndex !== null) {
+                            st.slots[idx] = {
+                                photoIndex: savedSlot.photoIndex,
+                                rotation: savedSlot.rotation || 0,
+                                scale: savedSlot.scale || 1,
+                                panX: savedSlot.panX || 0,
+                                panY: savedSlot.panY || 0
+                            };
+                            renderSlot(idx);
+                        }
+                    });
+                }
+
+                // Restore date/time checkbox states
+                st.addDate = !!savedState.addDate;
+                st.addTime = !!savedState.addTime;
+                const toggleDateEl = document.getElementById('toggleDate');
+                const toggleTimeEl = document.getElementById('toggleTime');
+                if (toggleDateEl) toggleDateEl.checked = st.addDate;
+                if (toggleTimeEl) toggleTimeEl.checked = st.addTime;
+                renderDateTime();
+
+                // Restore stickers
+                if (Array.isArray(savedState.stickers)) {
+                    savedState.stickers.forEach(savedSticker => {
+                        const id = st.nextId++;
+                        const data = {
+                            id,
+                            src: savedSticker.src,
+                            x: savedSticker.x,
+                            y: savedSticker.y,
+                            rotation: savedSticker.rotation || 0,
+                            scale: savedSticker.scale || 1,
+                            el: null
+                        };
+                        st.stickers.push(data);
+                        renderSticker(data);
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Failed to restore editor state:', e);
+        }
+    }
+
     buildThumbnails();
     buildStickerPanel();
     setInterval(renderDateTime, 1000);
@@ -715,6 +771,30 @@ async function goPreview() {
 
         sessionStorage.setItem('previewImage', dataURL);
         sessionStorage.setItem('previewFrame', st.frameType);
+
+        // Save current editor state for re-editing
+        const params = new URLSearchParams(window.location.search);
+        const editorState = {
+            slots: st.slots.map(s => ({
+                photoIndex: s.photoIndex,
+                rotation: s.rotation,
+                scale: s.scale,
+                panX: s.panX,
+                panY: s.panY
+            })),
+            stickers: st.stickers.map(s => ({
+                src: s.src,
+                x: s.x,
+                y: s.y,
+                rotation: s.rotation,
+                scale: s.scale
+            })),
+            addDate: st.addDate,
+            addTime: st.addTime,
+            frameType: st.frameType,
+            mode: params.get('mode')
+        };
+        sessionStorage.setItem('boothEditorState', JSON.stringify(editorState));
 
         const strip = await BoothAPI.saveStrip({
             imageBase64: dataURL,

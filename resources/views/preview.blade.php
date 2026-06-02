@@ -140,7 +140,6 @@
                 const token = document.querySelector('meta[name="csrf-token"]').content;
 
                 // Tambah ini — ambil Firebase ID token
-                const user = firebase.auth().currentUser;
                 const firebaseToken = user ? await user.getIdToken() : 'dev-token';
 
                 const response = await fetch('/strip/save', {

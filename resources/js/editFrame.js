@@ -79,7 +79,6 @@ const st = {
 const frameOuter    = document.getElementById('frameOuter');
 const frameSlots    = document.getElementById('frameSlots');
 const stickersLayer = document.getElementById('stickersLayer');
-const frameLogo     = document.getElementById('frameLogo');
 const frameDatetime = document.getElementById('frameDatetime');
 const rotateBtn     = document.getElementById('rotateBtn');
 const scaleSlider   = document.getElementById('scaleSlider');
@@ -200,8 +199,7 @@ function buildFrame() {
     if (old) old.remove();
     frameSlots.innerHTML = '';
 
-    // Add a frame-specific class so CSS theme selectors apply
-    frameOuter.className        = 'frame-outer ' + ('frame-' + st.frameType).replace(/\s+/g, '-');
+    frameOuter.className        = 'frame-outer';
     frameOuter.style.width      = cfg.frameW + 'px';
     frameOuter.style.height     = cfg.frameH + 'px';
     frameOuter.style.overflow   = 'hidden';
@@ -314,10 +312,6 @@ function buildFrame() {
         box-sizing: border-box;
         pointer-events: none;
     `;
-    if (frameLogo) {
-        frameLogo.src = '/assets/footer.png';
-        frameLogo.style.filter = st.frameType === 'everyday-white' ? 'invert(1)' : 'none';
-    }
 
     // Click outside stickers to deselect
     frameOuter.addEventListener('click', e => {
@@ -639,6 +633,49 @@ function renderDateTime() {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   IMAGE LOADER (untuk export canvas)
+   - crossOrigin='anonymous' supaya canvas TIDAK ke-taint
+     (kalau ke-taint, toDataURL() bakal throw SecurityError —
+      ini salah satu sebab "jalan di laptopku, gagal di laptop lain")
+   - timeout 8 detik supaya 1 gambar yang stuck tidak ngegantung
+     seluruh proses export
+   - data: URL (foto hasil kamera/upload) tidak perlu crossOrigin
+═══════════════════════════════════════════════════════════ */
+function drawImageAsync(src, onLoadDraw) {
+    return new Promise(resolve => {
+        const img  = new Image();
+        let settled = false;
+        const finish = () => {
+            if (settled) return;
+            settled = true;
+            resolve();
+        };
+        const timer = setTimeout(() => {
+            console.warn('Image load timeout:', src);
+            finish();
+        }, 8000);
+
+        img.onload = () => {
+            clearTimeout(timer);
+            try { onLoadDraw(img); }
+            catch (e) { console.warn('Draw failed for', src, e); }
+            finish();
+        };
+        img.onerror = () => {
+            clearTimeout(timer);
+            console.warn('Image failed to load:', src);
+            finish();
+        };
+
+        // data: URL tidak butuh CORS; asset same-origin aman pakai anonymous
+        if (!String(src).startsWith('data:')) {
+            img.crossOrigin = 'anonymous';
+        }
+        img.src = src;
+    });
+}
+
+/* ═══════════════════════════════════════════════════════════
    EXPORT TO CANVAS
 ═══════════════════════════════════════════════════════════ */
 async function exportFrame() {
@@ -675,47 +712,33 @@ async function exportFrame() {
     for (let i = 0; i < st.slots.length; i++) {
         const s = st.slots[i], r = rects[i];
         if (!r || s.photoIndex === null || !st.photos[s.photoIndex]) continue;
-        await new Promise(res => {
-            const img = new Image();
-            img.onload = () => {
-                ctx.save();
-                ctx.beginPath(); ctx.rect(r.x, r.y, r.w, r.h); ctx.clip();
-                const cx = r.x + r.w/2, cy = r.y + r.h/2;
-                ctx.translate(cx + s.panX, cy + s.panY);
-                ctx.rotate(s.rotation * Math.PI/180);
-                const ar = img.naturalWidth / img.naturalHeight, sr = r.w / r.h;
-                let dw, dh;
-                if (ar > sr) { dw = r.w * s.scale; dh = dw / ar; }
-                else         { dh = r.h * s.scale; dw = dh * ar; }
-                ctx.drawImage(img, -dw/2, -dh/2, dw, dh);
-                ctx.restore(); res();
-            };
-            img.onerror = res; img.src = st.photos[s.photoIndex];
+        await drawImageAsync(st.photos[s.photoIndex], img => {
+            ctx.save();
+            ctx.beginPath(); ctx.rect(r.x, r.y, r.w, r.h); ctx.clip();
+            const cx = r.x + r.w/2, cy = r.y + r.h/2;
+            ctx.translate(cx + s.panX, cy + s.panY);
+            ctx.rotate(s.rotation * Math.PI/180);
+            const ar = img.naturalWidth / img.naturalHeight, sr = r.w / r.h;
+            let dw, dh;
+            if (ar > sr) { dw = r.w * s.scale; dh = dw / ar; }
+            else         { dh = r.h * s.scale; dw = dh * ar; }
+            ctx.drawImage(img, -dw/2, -dh/2, dw, dh);
+            ctx.restore();
         });
     }
 
     // Draw frame PNG ON TOP of photos (transparent holes reveal photos)
-    await new Promise(res => {
-        const frameImg = new Image();
-        frameImg.onload = () => {
-            ctx.drawImage(frameImg, 0, 0, cfg.frameW, cfg.frameH);
-            res();
-        };
-        frameImg.onerror = res;
-        frameImg.src = cfg.pngSrc;
+    await drawImageAsync(cfg.pngSrc, frameImg => {
+        ctx.drawImage(frameImg, 0, 0, cfg.frameW, cfg.frameH);
     });
 
     // Draw logo
-    await new Promise(res => {
-        const logo = new Image();
-        logo.onload = () => {
-            const lh = 18, lw = logo.naturalWidth * (lh / logo.naturalHeight);
-            const ly = cfg.frameH - cfg.footerH + (cfg.footerH - lh) / 2;
-            if (st.frameType === 'everyday-white') ctx.filter = 'invert(1)';
-            ctx.drawImage(logo, 10, ly, lw, lh);
-            ctx.filter = 'none'; res();
-        };
-        logo.onerror = res; logo.src = '/assets/footer.png';
+    await drawImageAsync('/assets/footer.png', logo => {
+        const lh = 18, lw = logo.naturalWidth * (lh / logo.naturalHeight);
+        const ly = cfg.frameH - cfg.footerH + (cfg.footerH - lh) / 2;
+        if (st.frameType === 'og-black') ctx.filter = 'invert(1)';
+        ctx.drawImage(logo, 10, ly, lw, lh);
+        ctx.filter = 'none';
     });
 
     // Date/time
@@ -724,7 +747,7 @@ async function exportFrame() {
             'classic-baby-pink': '#7a3050',
             'everyday-white':    '#555',
             'shimmer-pink':      '#6a1a85',
-            'og-black':          '#ffffff',
+            'og-black':          'rgba(255,255,255,0.65)',
         };
         ctx.fillStyle    = dtColors[st.frameType] || '#555';
         ctx.font         = '8px Poppins,sans-serif';
@@ -737,26 +760,30 @@ async function exportFrame() {
     // Stickers (on top of everything)
     const fr = frameOuter.getBoundingClientRect();
     for (const st2 of st.stickers) {
-        await new Promise(res => {
-            const img = new Image();
-            img.onload = () => {
-                const el = st2.el; if (!el) { res(); return; }
-                const er = el.getBoundingClientRect();
-                const rx = (er.left - fr.left) / fr.width  * cfg.frameW;
-                const ry = (er.top  - fr.top)  / fr.height * cfg.frameH;
-                const rw = er.width  / fr.width  * cfg.frameW;
-                const rh = er.height / fr.height * cfg.frameH;
-                ctx.save();
-                ctx.translate(rx + rw/2, ry + rh/2);
-                ctx.rotate(st2.rotation * Math.PI/180);
-                ctx.drawImage(img, -rw/2, -rh/2, rw, rh);
-                ctx.restore(); res();
-            };
-            img.onerror = res; img.src = st2.src;
+        const el = st2.el;
+        if (!el) continue;
+        const er = el.getBoundingClientRect();
+        const rx = (er.left - fr.left) / fr.width  * cfg.frameW;
+        const ry = (er.top  - fr.top)  / fr.height * cfg.frameH;
+        const rw = er.width  / fr.width  * cfg.frameW;
+        const rh = er.height / fr.height * cfg.frameH;
+        await drawImageAsync(st2.src, img => {
+            ctx.save();
+            ctx.translate(rx + rw/2, ry + rh/2);
+            ctx.rotate(st2.rotation * Math.PI/180);
+            ctx.drawImage(img, -rw/2, -rh/2, rw, rh);
+            ctx.restore();
         });
     }
 
-    return canvas.toDataURL('image/jpeg', 0.93);
+    // toDataURL bisa throw kalau canvas ter-taint oleh gambar cross-origin.
+    // Dibungkus supaya errornya jelas, bukan diam-diam gagal.
+    try {
+        return canvas.toDataURL('image/jpeg', 0.93);
+    } catch (e) {
+        console.error('Canvas export gagal (kemungkinan tainted/cross-origin image):', e);
+        throw new Error('CANVAS_TAINTED');
+    }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -809,13 +836,31 @@ async function goPreview() {
             addTime:     st.addTime,
         });
 
+        // ── PENTING ──────────────────────────────────────────────
+        // Upload sudah berhasil di sini, dan controller balikin
+        // qr_url + cloudinary_url. Simpan supaya halaman preview /
+        // qrcode TIDAK perlu upload ulang (yang versi lama-nya
+        // gagal di laptop lain karena bergantung ke Firebase).
+        // ─────────────────────────────────────────────────────────
+        if (strip.qr_url)         sessionStorage.setItem('qrUrl',         strip.qr_url);
+        if (strip.cloudinary_url) sessionStorage.setItem('stripImageUrl', strip.cloudinary_url);
+        if (strip.strip_id)       sessionStorage.setItem('boothStripId',  strip.strip_id);
+
         window.location.href = `/preview?strip_id=${strip.strip_id}`;
 
     } catch (err) {
         console.error('Export/upload failed:', err);
 
+        if (err && err.message === 'CANVAS_TAINTED') {
+            alert('Gagal memproses gambar (cross-origin). Pastikan semua aset (frame/stiker/foto) berasal dari domain yang sama.');
+            if (btn) { btn.disabled = false; btn.textContent = 'See Preview →'; }
+            return;
+        }
+
+        // Upload ke server gagal tapi gambar lokal ada → tetap bisa preview offline.
         const fallback = sessionStorage.getItem('previewImage');
         if (fallback) {
+            console.warn('Upload ke server gagal, lanjut preview pakai gambar lokal (mode offline).');
             window.location.href = '/preview';
         } else {
             alert('Could not generate preview. Please try again.');

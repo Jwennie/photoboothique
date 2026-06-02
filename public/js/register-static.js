@@ -59,7 +59,12 @@ if (registerForm) {
             sessionStorage.setItem('firebaseUserName', name);
             window.location.href = '/';
         } catch (error) {
-            showRegisterError(getFriendlyRegisterError(error));
+            // Log full error for debugging
+            console.error('Firebase register error', error);
+            // Show friendly message when possible, otherwise display raw code/message for diagnosis
+            const friendly = getFriendlyRegisterError(error);
+            const raw = error?.code || error?.message || null;
+            showRegisterError(friendly + (raw ? ` (detail: ${raw})` : ''));
         }
     });
 }

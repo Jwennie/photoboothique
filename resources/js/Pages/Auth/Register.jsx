@@ -1,6 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
 import AuthLayout from '@/Layouts/AuthLayout';
 import { registerWithEmail, firebaseErrorMessage } from '@/lib/useFirebaseAuth';
 

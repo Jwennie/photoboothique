@@ -130,10 +130,11 @@
     opacity: 0.75;
 }
  
-.deco-star:nth-child(1) { top: 16px; left: 20px; font-size: 14px; }
-.deco-star:nth-child(2) { top: 12px; right: 36px; font-size: 20px; }
-.deco-star:nth-child(3) { bottom: 18px; left: 36px; font-size: 12px; }
- 
+.deco-star:nth-child(1) { top: 14px; left: 24px; font-size: 18px; }
+.deco-star:nth-child(2) { top: 14px; right: 24px; font-size: 18px; }
+.deco-star:nth-child(3) { bottom: 14px; left: 24px; font-size: 18px; }
+.deco-star:nth-child(4) { bottom: 14px; right: 24px; font-size: 18px; }
+
 /* ===== PICK CARDS ROW ===== */
 /* Used in chooseSession.html */
 .pick-cards {

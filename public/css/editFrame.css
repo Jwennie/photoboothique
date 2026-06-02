@@ -249,6 +249,14 @@ html, body { overflow-x: hidden; }
     transform-origin: center center;
 }
 
+/* In the editor we only want the decorative PNG templates visible.
+   Hide the outer element's background/border/box-shadow so templates
+   (the .frame-png-overlay) are the visible frames. Footer styles remain. */
+/* (Reverted) The outer frame's visual chrome is intentionally kept
+   so templates that rely on outer background/borders still render.
+   If you want templates to show only the PNG overlay, remove the
+   background/border here instead. */
+
 /* ── Slot grid inside frame ── */
 .frame-slots {
     display: grid;
@@ -440,7 +448,7 @@ html, body { overflow-x: hidden; }
 .frame-og-black { background: #111; border: 8px solid #111; }
 .frame-og-black .frame-footer { background: #111; }
 .frame-og-black .frame-logo { filter: invert(1) brightness(0.9); }
-.frame-og-black .frame-datetime { color: rgba(255,255,255,0.65); }
+.frame-og-black .frame-datetime{ color: #ffffff; }
 
 /* ═══════════════════════════════════════════════
    RIGHT — Sticker panel

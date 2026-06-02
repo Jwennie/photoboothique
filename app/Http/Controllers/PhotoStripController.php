@@ -64,7 +64,8 @@ class PhotoStripController extends Controller
             'qr_url'         => $qrUrl,
             'has_date'       => $data['add_date'] ?? false,
             'has_time'       => $data['add_time'] ?? false,
-            'is_public'      => false,
+            // When a user is logged in, save as public so it appears in their gallery
+            'is_public'      => $firebaseUid ? true : false,
             'likes'          => 0,
             'download_count' => 0,
         ]);

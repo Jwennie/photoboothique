@@ -4,22 +4,12 @@ const navLoginBtn = document.getElementById('nav-login-btn')
     || document.querySelector('.login-btn');
 
 // Store the current user label so we can restore it on mouseleave
-let currentUserLabel = sessionStorage.getItem('firebaseUserName') || '';
+// navbar-prerender.js (in <head>) already set the button text before first paint;
+// we just sync the label here so hover/logout logic has the right value.
+let currentUserLabel = sessionStorage.getItem('firebaseUserName')
+    || (sessionStorage.getItem('firebaseToken') ? 'My Account' : '');
+    
 
-// ── Instant pre-render from sessionStorage (no async delay) ──────────────────
-// Runs synchronously at parse time so the button is correct before any
-// Firebase async call fires, eliminating the Login→username flash.
-(function preRenderNavBtn() {
-    if (!navLoginBtn) return;
-    const saved = sessionStorage.getItem('firebaseUserName')
-               || (sessionStorage.getItem('firebaseToken') ? 'My Account' : null);
-    if (saved) {
-        currentUserLabel = saved;
-        navLoginBtn.textContent = saved;
-        navLoginBtn.title = 'Click to log out';
-    }
-    // If nothing in sessionStorage, keep the default "Login" from HTML
-})();
 async function syncFirebaseToken(user) {
     if (!user) {
         sessionStorage.removeItem('firebaseToken');

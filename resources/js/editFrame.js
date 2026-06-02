@@ -199,7 +199,8 @@ function buildFrame() {
     if (old) old.remove();
     frameSlots.innerHTML = '';
 
-    frameOuter.className        = 'frame-outer';
+    // Add a frame-specific class so CSS theme selectors apply
+    frameOuter.className        = 'frame-outer ' + ('frame-' + st.frameType).replace(/\s+/g, '-');
     frameOuter.style.width      = cfg.frameW + 'px';
     frameOuter.style.height     = cfg.frameH + 'px';
     frameOuter.style.overflow   = 'hidden';
@@ -718,7 +719,7 @@ async function exportFrame() {
             'classic-baby-pink': '#7a3050',
             'everyday-white':    '#555',
             'shimmer-pink':      '#6a1a85',
-            'og-black':          'rgba(255,255,255,0.65)',
+            'og-black':          '#ffffff',
         };
         ctx.fillStyle    = dtColors[st.frameType] || '#555';
         ctx.font         = '8px Poppins,sans-serif';

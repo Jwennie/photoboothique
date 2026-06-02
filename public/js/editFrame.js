@@ -52,7 +52,7 @@ const STICKER_SRCS = [
 const FRAME_CONFIGS = {
     'classic-baby-pink': { pngSrc: '/assets/classicbabypink.png', bgColor: '#fce8f0', layout: 'grid-2x2', frameW: 300, frameH: 393, footerH: 22, gap: 4,  pad: 7  },
     'everyday-white':    { pngSrc: '/assets/everydaywhite.png',   bgColor: '#fff',    layout: 'grid-2x2', frameW: 280, frameH: 500, footerH: 50, gap: 4,  pad: 6  },
-'shimmer-pink':      { pngSrc: '/assets/frames/shimmer-pink.png',    bgColor: '#f0d4fa', layout: 'grid-2x2', frameW: 280, frameH: 380, footerH: 50, gap: 4,  pad: 10 },
+    'shimmer-pink':      { pngSrc: '/assets/shimmer-pink.png',    bgColor: '#f0d4fa', layout: 'grid-2x2', frameW: 280, frameH: 380, footerH: 50, gap: 4,  pad: 10 },
     'og-black':          { pngSrc: '/assets/ogblack.png',         bgColor: '#111',    layout: 'grid-2x2', frameW: 360, frameH: 400, footerH: 48, gap: 5,  pad: 8  },
 };
 
@@ -203,7 +203,7 @@ function buildFrame() {
     frameOuter.style.width      = cfg.frameW + 'px';
     frameOuter.style.height     = cfg.frameH + 'px';
     frameOuter.style.overflow   = 'hidden';
-    frameOuter.style.background = cfg.bgColor || '#fff';
+    frameOuter.style.background = cfg.bgColor;
     frameOuter.style.position   = 'relative';
 
     // ── Slot layout ──
@@ -630,6 +630,13 @@ function renderDateTime() {
     if (st.addDate) parts.push(now.toLocaleDateString('en-GB', { day:'2-digit', month:'2-digit', year:'numeric' }));
     if (st.addTime) parts.push(now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }));
     frameDatetime.textContent = parts.join('  ');
+    const dtColors = {
+        'classic-baby-pink': '#7a3050',
+        'everyday-white':    '#555',
+        'shimmer-pink':      '#6a1a85',
+        'og-black':          'rgb(255, 255, 255)',
+    };
+    frameDatetime.style.color = dtColors[st.frameType] || '#555';
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -705,7 +712,6 @@ async function exportFrame() {
         logo.onload = () => {
             const lh = 18, lw = logo.naturalWidth * (lh / logo.naturalHeight);
             const ly = cfg.frameH - cfg.footerH + (cfg.footerH - lh) / 2;
-            if (st.frameType === 'og-black') ctx.filter = 'invert(1)';
             ctx.drawImage(logo, 10, ly, lw, lh);
             ctx.filter = 'none'; res();
         };
@@ -718,7 +724,7 @@ async function exportFrame() {
             'classic-baby-pink': '#7a3050',
             'everyday-white':    '#555',
             'shimmer-pink':      '#6a1a85',
-            'og-black':          'rgba(255,255,255,0.65)',
+            'og-black':          'rgb(255, 255, 255)',
         };
         ctx.fillStyle    = dtColors[st.frameType] || '#555';
         ctx.font         = '8px Poppins,sans-serif';

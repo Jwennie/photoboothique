@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/css/preview.css">
     <!-- CSRF token so the upload POST is accepted by Laravel -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script src="/js/navbar-prerender.js"></script>
+    <script src="../js/navbar-prerender.js"></script>
 </head>
 <body>
     <div class="background">

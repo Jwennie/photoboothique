@@ -16,6 +16,21 @@ async function setAuthToken(token) {
     }
 }
 
+function setupPasswordToggles() {
+    document.querySelectorAll('.password-toggle').forEach((toggle) => {
+        const group = toggle.closest('.password-input-group');
+        const input = group?.querySelector('input');
+        if (!input) return;
+
+        toggle.addEventListener('click', () => {
+            const isVisible = input.type === 'text';
+            input.type = isVisible ? 'password' : 'text';
+            toggle.textContent = isVisible ? '🙉' : '🙈';
+            toggle.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+        });
+    });
+}
+
 if (loginForm) {
     loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -54,17 +69,27 @@ if (loginForm) {
 
 function getFirebaseLoginError(error) {
     const code = error?.code || '';
+    const message = error?.message || '';
     const friendlyMessages = {
-        'auth/invalid-login-credentials': 'Your username or password is incorrect.',
-        'auth/invalid-credential':        'Your username or password is incorrect.',
-        'auth/wrong-password':            'Your username or password is incorrect.',
-        'auth/user-not-found':            'Your username or password is incorrect.',
+        'auth/invalid-login-credentials': 'Your email or password is incorrect.',
+        'auth/invalid-credential':        'Your email or password is incorrect.',
+        'auth/wrong-password':            'Your email or password is incorrect.',
+        'auth/user-not-found':            'Your email or password is incorrect.',
         'auth/invalid-email':             'Please enter a valid email address.',
         'auth/user-disabled':             'This account has been disabled. Please contact support.',
-        'auth/too-many-requests':         'Too many failed attempts. Please try again later.',
+        'auth/too-many-requests':         'Too many failed login attempts. Please try again later.',
         'auth/network-request-failed':    'Network error. Please check your connection and try again.',
+        'auth/operation-not-allowed':     'Login is currently unavailable. Please try again later.',
+        'auth/account-exists-with-different-credential': 'An account already exists with this email but uses a different sign-in method.',
     };
-    return friendlyMessages[code] || 'Login failed. Please try again.';
+    
+    const friendly = friendlyMessages[code];
+    if (friendly) return friendly;
+    
+    // Log unknown errors for debugging
+    if (code) console.error('Firebase login error:', code, message);
+    
+    return 'Login failed. Please try again.';
 }
 
 if (googleButton) {
@@ -89,3 +114,5 @@ if (googleButton) {
         }
     });
 }
+
+setupPasswordToggles();
